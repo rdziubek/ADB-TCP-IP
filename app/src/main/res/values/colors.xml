@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#000</color>
+    <color name="colorPrimaryDark">#000</color>
+    <color name="colorAccent">#000</color>
+    <color name="colorON">#2e7d32</color>
+    <color name="colorOFF">#851B4D</color>
+    <color name="grey">#212121</color>
+    <color name="lightgrey">#BFBFBF</color>
+    <color name="port_active">#9CD16F</color>
+</resources>
