@@ -260,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
         //TODO: add settings (port number)
         if (id == R.id.menu_item_github) {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("http://www.github.com/witampanstwa/"));
+                    Uri.parse("https://github.com/witampanstwa/ADB-TCP-IP/"));
             startActivity(browserIntent);
             return true;
         }
