@@ -2,6 +2,7 @@ package pl.witampanstwa_.adbtcpip;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
@@ -10,14 +11,16 @@ import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 //import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -33,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
     private ConstraintLayout clToggle;
     private TextView twStatus, twPort;
     private EditText etPort;
+    private ImageView ivRestore;
+
+    private SharedPreferences portPrefs;
 
 //    String TAG = "ADBTCPIPapr22";
 
@@ -41,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
         twStatus.setTextColor(Color.WHITE);
         twPort.setVisibility(View.VISIBLE);
         etPort.setVisibility(View.VISIBLE);
+        if (!port.equals(""))
+            ivRestore.setVisibility(View.VISIBLE);
     }
 
     private void setThemeOn() {
@@ -48,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         twStatus.setTextColor(Color.WHITE);
         twPort.setVisibility(View.GONE);
         etPort.setVisibility(View.GONE);
+        ivRestore.setVisibility(View.GONE);
     }
 
     private String getIP() {
@@ -70,6 +79,13 @@ public class MainActivity extends AppCompatActivity {
         }
         twStatus.setText(getString(R.string.status_reconnecting));
         return getIP();     //try to get the IP address once again since a network error had occurred
+    }
+
+    private void savePort(CharSequence sequence){
+        portPrefs
+                .edit()
+                .putString("port", sequence.toString())
+                .apply();
     }
 
     private void setPort() {
@@ -186,6 +202,29 @@ public class MainActivity extends AppCompatActivity {
         }
     });
 
+    private TextWatcher filterTextWatcher = new TextWatcher() {
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            //save port number
+            savePort(s);
+
+            //restore button
+            if (s.length() != 0)
+                ivRestore.setVisibility(View.VISIBLE);
+            else
+                ivRestore.setVisibility(View.GONE);
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -206,10 +245,19 @@ public class MainActivity extends AppCompatActivity {
         twStatus = findViewById(R.id.twstatus);
         etPort = findViewById(R.id.etport);
         twPort = findViewById(R.id.twport);
+        ivRestore = findViewById(R.id.ivRestore);
+
+        etPort.addTextChangedListener(filterTextWatcher);
+
+        portPrefs = this.getSharedPreferences(
+                "pl.witampanstwa_.adbtcpip", Context.MODE_PRIVATE);
 
         /*
         TODO: Implement adb status check here.
          */
+
+        port = portPrefs.getString("port", "");
+        etPort.setText(port);
 
         //set the appearance of new activity launched after adb via wifi has been turned on, depending on received data:
         if (startedSuccessfully) {
@@ -266,5 +314,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void resetPort(View view) {
+        etPort.setText("");
+        savePort("");
+        setPort();
     }
 }
