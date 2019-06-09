@@ -8,4 +8,5 @@
     <color name="grey">#212121</color>
     <color name="lightgrey">#BFBFBF</color>
     <color name="port_active">#9CD16F</color>
+    <color name="color_bg">#2A2A2A</color>
 </resources>
