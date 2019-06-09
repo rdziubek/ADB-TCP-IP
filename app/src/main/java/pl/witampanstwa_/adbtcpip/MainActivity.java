@@ -10,7 +10,6 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
-//import android.util.Log;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
@@ -39,8 +38,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageView ivRestore;
 
     private SharedPreferences portPrefs;
-
-//    String TAG = "ADBTCPIPapr22";
 
     private void setThemeOff() {
         twStatus.setText(getString(R.string.status_off));
@@ -261,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
 
         //set the appearance of new activity launched after adb via wifi has been turned on, depending on received data:
         if (startedSuccessfully) {
-            status = String.format("Turned ON\nat %s:%s", getIP(), port);
+            status = String.format("Turned ON\nat %s:%s", getIP(), port.equals("") ? "5555" : port);
             setThemeOn();
         } else
             setThemeOff();
