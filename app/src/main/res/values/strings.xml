@@ -8,7 +8,7 @@
     <string name="click_to_toggle">TAP TO TOGGLE</string>
     <string name="root_refused">Root privileges refused</string>
     <string name="error">Error</string>
-    <string name="no_wifi">WiFi not connected</string>
+    <string name="no_wifi">WiFi/Hotspot unavailable</string>
     <string name="root_not_detected">Root privileges refused (device possibly not rooted)</string>
     <string name="status_reconnecting">Reconnecting&#8230;</string>
     <string name="working">Working&#8230;</string>

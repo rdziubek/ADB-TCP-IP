@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -34,10 +35,51 @@ public class MainActivity extends AppCompatActivity {
 
     private ConstraintLayout clToggle;
     private TextView twStatus, twPort;
+    private final Thread shellCommands = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            final String result = executeShellCommands();
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    twStatus.setText(result);
+                    twStatus.setTextColor(suError ? Color.RED : Color.WHITE);
+
+                    if ((startedSuccessfully || stoppedSuccessfully) && !suError) {     //this has to be checked as there might have been an error (i.e. wifi error), and the theme shall then stay in the same state. Also, note the operator precedence: "||" > "&&" > "|".
+                        //restart activity to change theme
+                        restartEverythingExceptData();
+                    }
+                    suError = false;    //reset error status (everything has done executing now; time to reset the cycle). This necessarily has to be put there (not inside of the above "if", as the "if" is executed only when the suError is not true)
+                }
+            });
+        }
+    });
     private EditText etPort;
     private ImageView ivRestore;
-
     private SharedPreferences portPrefs;
+    private TextWatcher filterTextWatcher = new TextWatcher() {
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            //save port number
+            savePort(s);
+
+            //restore button
+            if (s.length() != 0)
+                ivRestore.setVisibility(View.VISIBLE);
+            else
+                ivRestore.setVisibility(View.GONE);
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+        }
+    };
 
     private void setThemeOff() {
         twStatus.setText(getString(R.string.status_off));
@@ -78,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         return getIP();     //try to get the IP address once again since a network error had occurred
     }
 
-    private void savePort(CharSequence sequence){
+    private void savePort(CharSequence sequence) {
         portPrefs
                 .edit()
                 .putString("port", sequence.toString())
@@ -101,6 +143,23 @@ public class MainActivity extends AppCompatActivity {
         } else {
             return false; // Wi-Fi adapter is OFF
         }
+    }
+
+    private boolean checkHotspotOn() {
+        boolean isSuccess = false;
+        WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        try {
+            isSuccess = (boolean) wifi.getClass().getMethod("isWifiApEnabled").invoke(wifi);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        return isSuccess;
     }
 
     private String executeShellCommands() {
@@ -178,50 +237,6 @@ public class MainActivity extends AppCompatActivity {
         finish();
     }
 
-    private final Thread shellCommands = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            final String result = executeShellCommands();
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    twStatus.setText(result);
-                    twStatus.setTextColor(suError ? Color.RED : Color.WHITE);
-
-                    if ((startedSuccessfully || stoppedSuccessfully) && !suError) {     //this has to be checked as there might have been an error (i.e. wifi error), and the theme shall then stay in the same state. Also, note the operator precedence: "||" > "&&" > "|".
-                        //restart activity to change theme
-                        restartEverythingExceptData();
-                    }
-                    suError = false;    //reset error status (everything has done executing now; time to reset the cycle). This necessarily has to be put there (not inside of the above "if", as the "if" is executed only when the suError is not true)
-                }
-            });
-        }
-    });
-
-    private TextWatcher filterTextWatcher = new TextWatcher() {
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-            //save port number
-            savePort(s);
-
-            //restore button
-            if (s.length() != 0)
-                ivRestore.setVisibility(View.VISIBLE);
-            else
-                ivRestore.setVisibility(View.GONE);
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -269,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
                 twStatus.setTextColor(Color.WHITE);     //reset the color (new cycle starts)
                 twStatus.setText(getString(R.string.status_requesting_root));
 
-                if (checkWifiOnAndConnected()) {
+                if (checkWifiOnAndConnected() || checkHotspotOn()) {
                     setPort();
 
                     if (shellCommands.getState() == Thread.State.NEW) {     //if thread is not running
